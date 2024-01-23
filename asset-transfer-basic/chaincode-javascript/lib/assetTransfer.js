@@ -5,28 +5,30 @@
 const { Contract } = require('fabric-contract-api');
 
 class DiplomaContract extends Contract {
-    async storeDiploma(ctx, studentID, diplomaNumber, subjects, issuerPublicKey) {
-        // Check if the transaction submitter is the registration office (issuer)
-        const submitterPublicKey = ctx.stub.getCreator().toString('hex');
-        if (submitterPublicKey !== issuerPublicKey) {
-            throw new Error('Permission denied: Only the registration office can arrange diplomas');
-        }
-
+    async createDiploma(ctx, studentID, diplomaNumber, subjects) {
         // Check if diploma with the given diplomaNumber already exists
         const existingDiploma = await ctx.stub.getState(diplomaNumber);
         if (existingDiploma && existingDiploma.length > 0) {
             throw new Error(`Diploma with number ${diplomaNumber} already exists`);
         }
 
+        // Check if the transaction submitter has the necessary permissions to create diplomas
+        const submitterPublicKey = ctx.stub.getCreator();
+        // Add logic to check if the submitter has the role of the issuer or any other relevant check
+
         // Create a new diploma record
         const diplomaRecord = {
             studentID,
             diplomaNumber,
             subjects,
+            issuerPublicKey: submitterPublicKey, // Store the public key of the issuer for verification purposes
         };
 
         // Store the diploma record on the ledger
         await ctx.stub.putState(diplomaNumber, Buffer.from(JSON.stringify(diplomaRecord)));
+
+        // Return the created diploma information
+        return 'Diploma created successfully';
     }
 
     async queryDiploma(ctx, diplomaNumber) {
@@ -37,33 +39,26 @@ class DiplomaContract extends Contract {
             throw new Error(`Diploma with number ${diplomaNumber} not found`);
         }
 
-        // Check if the transaction submitter is the student who owns the diploma
-        const submitterPublicKey = ctx.stub.getCreator().toString('hex');
-        const storedDiploma = JSON.parse(diplomaRecord.toString('utf8'));
-
-        if (storedDiploma.studentID !== submitterPublicKey) {
-            throw new Error('Permission denied: You can only view your own diploma information');
-        }
-
-        return storedDiploma;
+        return JSON.parse(diplomaRecord.toString('utf8'));
     }
 
     async getAllDiplomas(ctx) {
-        // Get all diploma records from the ledger
-        const submitterPublicKey = ctx.stub.getCreator().toString('hex');
         const iterator = await ctx.stub.getStateByRange('', '');
+
         const diplomas = [];
+        while (true) {
+            const result = await iterator.next();
 
-        for await (const result of iterator) {
-            const diploma = JSON.parse(result.value.toString('utf8'));
-
-            // Include only diplomas owned by the current student
-            if (diploma.studentID === submitterPublicKey) {
+            if (result.value) {
+                const diploma = JSON.parse(result.value.value.toString('utf8'));
                 diplomas.push(diploma);
             }
-        }
 
-        return diplomas;
+            if (result.done) {
+                await iterator.close();
+                return diplomas;
+            }
+        }
     }
 }
 
