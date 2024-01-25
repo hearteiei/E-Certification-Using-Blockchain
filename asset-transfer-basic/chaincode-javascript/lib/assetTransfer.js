@@ -25,8 +25,10 @@ class DiplomaContract extends Contract {
         // Store the diploma record on the ledger
         await ctx.stub.putState(diplomaNumber, Buffer.from(JSON.stringify(diplomaRecord)));
 
-        // Return the created diploma information
-        return 'Diploma created successfully';
+        const transactionID = ctx.stub.getTxID();
+
+        // Return the created diploma information along with the transaction ID
+        return `Diploma created successfully. Transaction ID: ${transactionID}`;
     }
 
     async queryDiploma(ctx, diplomaNumber) {
