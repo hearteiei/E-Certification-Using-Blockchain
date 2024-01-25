@@ -13,15 +13,13 @@ class DiplomaContract extends Contract {
         }
 
         // Check if the transaction submitter has the necessary permissions to create diplomas
-        const submitterPublicKey = ctx.stub.getCreator();
         // Add logic to check if the submitter has the role of the issuer or any other relevant check
 
         // Create a new diploma record
         const diplomaRecord = {
             studentID,
             diplomaNumber,
-            subjects,
-            issuerPublicKey: submitterPublicKey, // Store the public key of the issuer for verification purposes
+            subjects, // Store the public key of the issuer for verification purposes
         };
 
         // Store the diploma record on the ledger
