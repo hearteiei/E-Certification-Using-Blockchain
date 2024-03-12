@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -11,7 +12,7 @@ import (
 func (setup *OrgSetup) Invoke(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received Invoke request")
 	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(w, "ParseForm() err: %s", err)
+		http.Error(w, fmt.Sprintf("ParseForm() err: %s", err), http.StatusBadRequest)
 		return
 	}
 	chainCodeName := r.FormValue("chaincodeid")
@@ -21,20 +22,31 @@ func (setup *OrgSetup) Invoke(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("channel: %s, chaincode: %s, function: %s, args: %s\n", channelID, chainCodeName, function, args)
 	network := setup.Gateway.GetNetwork(channelID)
 	contract := network.GetContract(chainCodeName)
-	txn_proposal, err := contract.NewProposal(function, client.WithArguments(args...))
+	txnProposal, err := contract.NewProposal(function, client.WithArguments(args...))
 	if err != nil {
-		fmt.Fprintf(w, "Error creating txn proposal: %s", err)
+		http.Error(w, fmt.Sprintf("Error creating txn proposal: %s", err), http.StatusInternalServerError)
 		return
 	}
-	txn_endorsed, err := txn_proposal.Endorse()
+	txnEndorsed, err := txnProposal.Endorse()
 	if err != nil {
-		fmt.Fprintf(w, "Error endorsing txn: %s", err)
+		http.Error(w, fmt.Sprintf("Error endorsing txn: %s", err), http.StatusInternalServerError)
 		return
 	}
-	txn_committed, err := txn_endorsed.Submit()
+	txnCommitted, err := txnEndorsed.Submit()
 	if err != nil {
-		fmt.Fprintf(w, "Error submitting transaction: %s", err)
+		http.Error(w, fmt.Sprintf("Error submitting transaction: %s", err), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result())
+	// Construct response JSON
+	response := map[string]string{
+		"transaction_id": txnCommitted.TransactionID(),
+	}
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding JSON response: %s", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
 }
