@@ -18,13 +18,12 @@ type SmartContract struct {
 type Diploma struct {
 	ID            string `json:"ID"`
 	StudentName   string `json:"studentName"`
-	TeacherName   string `json:"teacherName"`
-	DiplomaNumber string `json:"diplomaNumber"`
-	SubjectTopic  string `json:"subjectTopic"`
+	Endorser_name string `json:"endorser_name"`
+	Course        string `json:"course"`
 	Issuer        string `json:"issuer"`
 	IssuedDate    string `json:"issuedDate"`
-	BeginDate     string `json:"beginDate"`
-	EndDate       string `json:"endDate"`
+	Begin_date    string `json:"begin_Date"`
+	End_date      string `json:"end_Date"`
 }
 
 // InitLedger adds a base set of assets to the ledger
@@ -33,56 +32,51 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 		{
 			ID:            "asset1",
 			StudentName:   "kunasin techasueb",
-			TeacherName:   "Dom pothingan",
-			DiplomaNumber: "1",
-			SubjectTopic:  "Fullstack Developement",
+			Endorser_name: "Dom pothingan",
+			Course:        "Fullstack Developement",
 			Issuer:        "CMU-Eleaning",
 			IssuedDate:    "2023-3-2",
-			BeginDate:     "2023-2-30",
-			EndDate:       "2023-3-2"},
+			Begin_date:    "2023-2-30",
+			End_date:      "2023-3-2"},
 		{
 			ID:            "asset2",
 			StudentName:   "kontakan kamfoo",
-			TeacherName:   "kampong woradut",
-			DiplomaNumber: "2",
-			SubjectTopic:  "Fullstack Developement",
+			Endorser_name: "kampong woradut",
+			Course:        "Fullstack Developement",
 			Issuer:        "CMU-Eleaning",
 			IssuedDate:    "2023-12-15",
-			BeginDate:     "2023-12-13",
-			EndDate:       "2023-12-2",
+			Begin_date:    "2023-12-13",
+			End_date:      "2023-12-2",
 		},
 		{
 			ID:            "asset3",
 			StudentName:   "Ronaldo",
-			TeacherName:   "messi",
-			DiplomaNumber: "3",
-			SubjectTopic:  "How To dribbing",
+			Endorser_name: "messi",
+			Course:        "How To dribbing",
 			Issuer:        "Barcelona FC",
 			IssuedDate:    "2022-3-2",
-			BeginDate:     "2022-2-30",
-			EndDate:       "2022-3-2",
+			Begin_date:    "2022-2-30",
+			End_date:      "2022-3-2",
 		},
 		{
 			ID:            "asset4",
 			StudentName:   "stephen curry",
-			TeacherName:   "jame harden",
-			DiplomaNumber: "4",
-			SubjectTopic:  "How to shoot 3 point",
+			Endorser_name: "jame harden",
+			Course:        "How to shoot 3 point",
 			Issuer:        "Golden warriors",
 			IssuedDate:    "2021-3-2",
-			BeginDate:     "2021-2-30",
-			EndDate:       "2021-3-2",
+			Begin_date:    "2021-2-30",
+			End_date:      "2021-3-2",
 		},
 		{
 			ID:            "asset5",
 			StudentName:   "Buakaw Bunchamek",
-			TeacherName:   "Rodthang jitmueangnon",
-			DiplomaNumber: "5",
-			SubjectTopic:  "How to knock in first round",
+			Endorser_name: "Rodthang jitmueangnon",
+			Course:        "How to knock in first round",
 			Issuer:        "one championship",
 			IssuedDate:    "2020-3-2",
-			BeginDate:     "2020-2-30",
-			EndDate:       "2020-3-2",
+			Begin_date:    "2020-2-30",
+			End_date:      "2020-3-2",
 		},
 	}
 
@@ -114,13 +108,12 @@ func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface,
 	diploma := Diploma{
 		ID:            id,
 		StudentName:   studentname,
-		TeacherName:   teacherName,
-		DiplomaNumber: diplomaNumber,
-		SubjectTopic:  subjectTopic,
+		Endorser_name: teacherName,
+		Course:        subjectTopic,
 		Issuer:        issuer,
 		IssuedDate:    issuedDate,
-		BeginDate:     beginDate,
-		EndDate:       endDate,
+		Begin_date:    beginDate,
+		End_date:      endDate,
 	}
 	diplomaJSON, err := json.Marshal(diploma)
 	if err != nil {
@@ -163,13 +156,12 @@ func (s *SmartContract) UpdateAsset(ctx contractapi.TransactionContextInterface,
 	diploma := Diploma{
 		ID:            id,
 		StudentName:   studentname,
-		TeacherName:   teacherName,
-		DiplomaNumber: diplomaNumber,
-		SubjectTopic:  subjectTopic,
+		Endorser_name: teacherName,
+		Course:        subjectTopic,
 		Issuer:        issuer,
 		IssuedDate:    issuedDate,
-		BeginDate:     beginDate,
-		EndDate:       endDate,
+		Begin_date:    beginDate,
+		End_date:      endDate,
 	}
 	diplomaJSON, err := json.Marshal(diploma)
 	if err != nil {
