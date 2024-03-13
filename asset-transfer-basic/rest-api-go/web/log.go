@@ -53,7 +53,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	newUser.status = "Pending"
 
 	users[newUser.Mail] = newUser
-	fmt.Fprintf(w, "User %s registered successfully. OTP sent to %s\n", newUser.Firstname+newUser.Lastname, newUser.Mail)
+	fmt.Fprintf(w, `{"message": "User %s registered successfully. OTP sent to %s"}`, newUser.Firstname+newUser.Lastname, newUser.Mail)
 }
 
 // This function simulates sending an email. You'll need to replace it with your actual email sending logic.
@@ -109,7 +109,7 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.status = "Success"
-	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.Mail)
+	fmt.Fprintf(w, `{"message": "User %s logged in successfully"}`, loginData.Mail)
 }
 
 // func resendOTP(userID string) error {
