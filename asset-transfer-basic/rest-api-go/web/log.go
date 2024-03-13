@@ -21,7 +21,7 @@ type User struct {
 	Password     string `json:"password"`
 	OTP          string
 	OTPTimestamp int64
-	status       string
+	Status       string
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,9 +50,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	// Store OTP and timestamp in user struct
 	newUser.OTP = otp
 	newUser.OTPTimestamp = time.Now().Unix()
-	newUser.status = "Pending"
+	newUser.Status = "Pending"
 
 	users[newUser.Mail] = newUser
+
 	fmt.Fprintf(w, `{"message": "User %s registered successfully. OTP sent to %s"}`, newUser.Firstname+newUser.Lastname, newUser.Mail)
 }
 
@@ -108,7 +109,8 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "OTP expired", http.StatusUnauthorized)
 		return
 	}
-	user.status = "Success"
+	user.Status = "Success"
+	users[loginData.Mail] = user
 	fmt.Fprintf(w, `{"message": "User %s logged in successfully"}`, loginData.Mail)
 }
 
@@ -157,6 +159,20 @@ type LoginResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+func getAllUsers(w http.ResponseWriter, r *http.Request) {
+	// Create a slice to hold all user data
+	var allUsers []User
+
+	// Iterate over the map and append each user to the slice
+	for _, user := range users {
+		allUsers = append(allUsers, user)
+	}
+
+	// Encode the slice of users as JSON and write it to the response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(allUsers)
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var loginData struct {
 		Mail     string `json:"mail"`
@@ -170,7 +186,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, exists := users[loginData.Mail]
-	if !exists || user.Password != loginData.Password || user.status != "Success" {
+	if !exists || user.Password != loginData.Password || user.Status != "Success" {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
