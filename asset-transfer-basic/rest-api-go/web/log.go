@@ -110,10 +110,7 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Status = "Success"
-<<<<<<< HEAD
-=======
 	users[loginData.Mail] = user
->>>>>>> 852a34462e80bdadf12da0a137c427b0a059203c
 	fmt.Fprintf(w, `{"message": "User %s logged in successfully"}`, loginData.Mail)
 }
 
