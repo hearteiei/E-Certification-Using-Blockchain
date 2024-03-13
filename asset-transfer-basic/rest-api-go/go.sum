@@ -5,6 +5,8 @@ github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg
 github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hyperledger/fabric-gateway v1.4.0 h1:wwCwujtOWNkRYQ32Uq9PfnJTOwHj5CgSU2mxkAhXzUE=
 github.com/hyperledger/fabric-gateway v1.4.0/go.mod h1:VqJ9AL9kEm4UQQ2JhHqG92Btw4tpjKE8N/uhlsQdEA4=
 github.com/hyperledger/fabric-protos-go-apiv2 v0.2.1 h1:iuCabkxwT1WZ06uREDjYPrtLsGFX05hwbpERYfmcatM=

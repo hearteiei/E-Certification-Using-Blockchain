@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/hyperledger/fabric-protos-go-apiv2 v0.2.1 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/rs/cors v1.10.1 // indirect

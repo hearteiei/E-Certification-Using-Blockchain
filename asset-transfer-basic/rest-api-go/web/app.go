@@ -25,10 +25,11 @@ type OrgSetup struct {
 func Serve(setups OrgSetup) {
 	http.HandleFunc("/query", setups.Query)
 	http.HandleFunc("/invoke", setups.Invoke)
+	http.HandleFunc("/register", registerHandler)
+	http.HandleFunc("/login", loginHandler)
 	corsHandler := cors.Default().Handler(http.DefaultServeMux)
 	fmt.Println("Listening (http://localhost:8000/)...")
 	if err := http.ListenAndServe(":8000", corsHandler); err != nil {
 		fmt.Println(err)
 	}
 }
-
