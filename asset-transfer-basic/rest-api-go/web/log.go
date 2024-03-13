@@ -8,12 +8,13 @@ import (
 	"net/smtp"
 	"strconv"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var users = make(map[string]User)
 
 type User struct {
-	UserID       string `json:"userid"`
 	Firstname    string `json:"firstname"`
 	Lastname     string `json:"lastname"`
 	Mail         string `json:"mail"`
@@ -30,7 +31,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, exists := users[newUser.UserID]; exists {
+	if _, exists := users[newUser.Mail]; exists {
 		http.Error(w, "User already exists", http.StatusBadRequest)
 		return
 	}
@@ -49,8 +50,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	newUser.OTP = otp
 	newUser.OTPTimestamp = time.Now().Unix()
 
-	users[newUser.UserID] = newUser
-	fmt.Fprintf(w, "User %s registered successfully. OTP sent to %s\n", newUser.UserID, newUser.Mail)
+	users[newUser.Mail] = newUser
+	fmt.Fprintf(w, "User %s registered successfully. OTP sent to %s\n", newUser.Firstname+newUser.Lastname, newUser.Mail)
 }
 
 // This function simulates sending an email. You'll need to replace it with your actual email sending logic.
@@ -79,8 +80,8 @@ func sendEmail(to, subject, body string) error {
 
 func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 	var loginData struct {
-		UserID string `json:"userid"`
-		OTP    string `json:"otp"`
+		Mail string `json:"mail"`
+		OTP  string `json:"otp"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&loginData)
@@ -89,7 +90,7 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, ok := users[loginData.UserID]
+	user, ok := users[loginData.Mail]
 	if !ok {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -106,7 +107,7 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.UserID)
+	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.Mail)
 }
 
 // func resendOTP(userID string) error {
@@ -149,9 +150,14 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 // 	fmt.Fprintf(w, "New OTP sent to user %s\n", requestData.UserID)
 // }
 
+type LoginResponse struct {
+	User        User   `json:"user"`
+	AccessToken string `json:"access_token"`
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var loginData struct {
-		UserID   string `json:"userid"`
+		Mail     string `json:"mail"`
 		Password string `json:"password"`
 	}
 
@@ -161,13 +167,43 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, exists := users[loginData.UserID]
+	user, exists := users[loginData.Mail]
 	if !exists || user.Password != loginData.Password {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
-	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.UserID)
+	// Generate JWT access token
+	accessToken, err := generateAccessToken(user.Mail)
+	if err != nil {
+		http.Error(w, "Failed to generate access token", http.StatusInternalServerError)
+		return
+	}
+
+	// Return user information and access token
+	response := LoginResponse{
+		User:        user,
+		AccessToken: accessToken,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func generateAccessToken(mail string) (string, error) {
+	// Create a new JWT token
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	// Set claims
+	claims := token.Claims.(jwt.MapClaims)
+	claims["mail"] = mail
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expires in 24 hours
+
+	// Sign the token with a secret key
+	accessToken, err := token.SignedString([]byte("259492")) // Replace "secret_key" with your own secret key
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 func generateOTP() string {
