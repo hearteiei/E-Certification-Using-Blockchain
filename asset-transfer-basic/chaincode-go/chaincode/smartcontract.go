@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/smtp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,8 @@ type SmartContract struct {
 // Insert struct field in alphabetic order => to achieve determinism across languages
 // golang keeps the order when marshal to json but doesn't order automatically
 type DiplomaStatus string
+
+var idCounter int = 0
 
 const (
 	DiplomaStatusPending DiplomaStatus = "Pending"
@@ -132,7 +135,9 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 }
 
 // CreateAsset issues a new asset to the world state with given details.
-func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface, id string, studentname string, teacherName string, mail string, subjectTopic string, issuer string, issuedDate string, beginDate string, endDate string, status string) error {
+func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface, studentname string, teacherName string, mail string, subjectTopic string, issuer string, issuedDate string, beginDate string, endDate string, status string) error {
+	idCounter++
+	id := strconv.Itoa(idCounter)
 	exists, err := s.AssetExists(ctx, id)
 	if err != nil {
 		return err
@@ -459,4 +464,66 @@ func (s *SmartContract) getUserIDByEmail(ctx contractapi.TransactionContextInter
 	userID := compositeKeyParts[1]
 
 	return userID, nil
+}
+
+// Define an additional struct to hold the index data
+type CourseIssuerIndex struct {
+	Course string `json:"course"`
+	Issuer string `json:"issuer"`
+}
+
+// Create an index entry mapping course to issuer
+func (s *SmartContract) CreateCourseIssuerIndex(ctx contractapi.TransactionContextInterface, course string, issuer string) error {
+	indexKey, err := ctx.GetStub().CreateCompositeKey("courseIssuerIndex", []string{course, issuer})
+	if err != nil {
+		return err
+	}
+	// Store the index entry in the world state
+	return ctx.GetStub().PutState(indexKey, []byte{})
+}
+
+// Update the index entry mapping course to issuer
+func (s *SmartContract) UpdateCourseIssuerIndex(ctx contractapi.TransactionContextInterface, course string, oldIssuer string, newIssuer string) error {
+	// Delete the existing index entry
+	oldIndexKey, err := ctx.GetStub().CreateCompositeKey("courseIssuerIndex", []string{course, oldIssuer})
+	if err != nil {
+		return err
+	}
+	err = ctx.GetStub().DelState(oldIndexKey)
+	if err != nil {
+		return err
+	}
+	// Create a new index entry
+	newIndexKey, err := ctx.GetStub().CreateCompositeKey("courseIssuerIndex", []string{course, newIssuer})
+	if err != nil {
+		return err
+	}
+	// Store the updated index entry in the world state
+	return ctx.GetStub().PutState(newIndexKey, []byte{})
+}
+
+// Query the issuer by course
+func (s *SmartContract) QueryIssuerByCourse(ctx contractapi.TransactionContextInterface, course string) ([]string, error) {
+	resultsIterator, err := ctx.GetStub().GetStateByPartialCompositeKey("courseIssuerIndex", []string{course})
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	var issuers []string
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		// Extract issuer from composite key
+		_, compositeKeyParts, err := ctx.GetStub().SplitCompositeKey(queryResponse.Key)
+		if err != nil {
+			return nil, err
+		}
+		issuer := compositeKeyParts[1]
+		issuers = append(issuers, issuer)
+	}
+
+	return issuers, nil
 }

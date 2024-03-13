@@ -27,6 +27,7 @@ func Serve(setups OrgSetup) {
 	http.HandleFunc("/invoke", setups.Invoke)
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/checkotp", checkOTPValidity)
 	corsHandler := cors.Default().Handler(http.DefaultServeMux)
 	fmt.Println("Listening (http://localhost:8000/)...")
 	if err := http.ListenAndServe(":8000", corsHandler); err != nil {
