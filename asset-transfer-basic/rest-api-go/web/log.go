@@ -21,6 +21,7 @@ type User struct {
 	Password     string `json:"password"`
 	OTP          string
 	OTPTimestamp int64
+	status       string
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +50,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	// Store OTP and timestamp in user struct
 	newUser.OTP = otp
 	newUser.OTPTimestamp = time.Now().Unix()
+	newUser.status = "Pending"
 
 	users[newUser.Mail] = newUser
 	fmt.Fprintf(w, "User %s registered successfully. OTP sent to %s\n", newUser.Firstname+newUser.Lastname, newUser.Mail)
@@ -106,7 +108,7 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "OTP expired", http.StatusUnauthorized)
 		return
 	}
-
+	user.status = "Success"
 	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.Mail)
 }
 
@@ -168,7 +170,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, exists := users[loginData.Mail]
-	if !exists || user.Password != loginData.Password {
+	if !exists || user.Password != loginData.Password || user.status != "Success" {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
