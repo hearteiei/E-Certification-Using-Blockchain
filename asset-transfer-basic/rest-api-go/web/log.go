@@ -109,45 +109,45 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "User %s logged in successfully\n", loginData.UserID)
 }
 
-func resendOTP(userID string) error {
-	// Generate a new OTP
-	newOTP := generateOTP()
+// func resendOTP(userID string) error {
+// 	// Generate a new OTP
+// 	newOTP := generateOTP()
 
-	// Update OTP and timestamp for the user
-	user, ok := users[userID]
-	if !ok {
-		return fmt.Errorf("User not found")
-	}
-	user.OTP = newOTP
-	user.OTPTimestamp = time.Now().Unix()
-	users[userID] = user
+// 	// Update OTP and timestamp for the user
+// 	user, ok := users[userID]
+// 	if !ok {
+// 		return fmt.Errorf("User not found")
+// 	}
+// 	user.OTP = newOTP
+// 	user.OTPTimestamp = time.Now().Unix()
+// 	users[userID] = user
 
-	// Send the new OTP to the user's email address (replace with your email sending logic)
-	fmt.Printf("New OTP sent to %s: %s\n", user.Mail, newOTP)
+// 	// Send the new OTP to the user's email address (replace with your email sending logic)
+// 	fmt.Printf("New OTP sent to %s: %s\n", user.Mail, newOTP)
 
-	return nil
-}
+// 	return nil
+// }
 
-func resendOTPHandler(w http.ResponseWriter, r *http.Request) {
-	var requestData struct {
-		UserID string `json:"userid"`
-	}
+// func resendOTPHandler(w http.ResponseWriter, r *http.Request) {
+// 	var requestData struct {
+// 		UserID string `json:"userid"`
+// 	}
 
-	// Decode request body
-	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	// Decode request body
+// 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Resend OTP for the specified user ID
-	if err := resendOTP(requestData.UserID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	// Resend OTP for the specified user ID
+// 	if err := resendOTP(requestData.UserID); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Respond with success message
-	fmt.Fprintf(w, "New OTP sent to user %s\n", requestData.UserID)
-}
+// 	// Respond with success message
+// 	fmt.Fprintf(w, "New OTP sent to user %s\n", requestData.UserID)
+// }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var loginData struct {
