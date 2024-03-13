@@ -53,6 +53,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	newUser.Status = "Pending"
 
 	users[newUser.Mail] = newUser
+
 	fmt.Fprintf(w, `{"message": "User %s registered successfully. OTP sent to %s"}`, newUser.Firstname+newUser.Lastname, newUser.Mail)
 }
 
@@ -109,6 +110,10 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Status = "Success"
+<<<<<<< HEAD
+=======
+	users[loginData.Mail] = user
+>>>>>>> 852a34462e80bdadf12da0a137c427b0a059203c
 	fmt.Fprintf(w, `{"message": "User %s logged in successfully"}`, loginData.Mail)
 }
 
@@ -155,6 +160,20 @@ func checkOTPValidity(w http.ResponseWriter, r *http.Request) {
 type LoginResponse struct {
 	User        User   `json:"user"`
 	AccessToken string `json:"access_token"`
+}
+
+func getAllUsers(w http.ResponseWriter, r *http.Request) {
+	// Create a slice to hold all user data
+	var allUsers []User
+
+	// Iterate over the map and append each user to the slice
+	for _, user := range users {
+		allUsers = append(allUsers, user)
+	}
+
+	// Encode the slice of users as JSON and write it to the response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(allUsers)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
