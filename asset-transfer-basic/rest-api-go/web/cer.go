@@ -5,10 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/smtp"
+	"net/url"
 
 	"github.com/jung-kurt/gofpdf"
+	"github.com/skip2/go-qrcode"
 )
 
 type CertificateInfo struct {
@@ -19,11 +22,24 @@ type CertificateInfo struct {
 	BeginDate    string `json:"beginDate"`
 	EndDate      string `json:"endDate"`
 	Mail         string `json:"Mail"`
+	Transaction  string `json:"transaction"`
 }
+
+// type certificateData struct {
+// 	studentName  string `json:"studentName"`
+// 	course       string `json:"course"`
+// 	issuer       string `json:"issuer"`
+// 	endorserName string `json:"endorserName"`
+// 	beginDate    string `json:"beginDate"`
+// 	endDate      string `json:"endDate"`
+// 	mail         string `json:"endDate"`
+// }
 
 func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 	// Parse JSON from request body
 	var cert CertificateInfo
+
+	// var qrdata certificateData
 	if err := json.NewDecoder(r.Body).Decode(&cert); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -49,6 +65,19 @@ func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 }
 
 func generatePDF(cert CertificateInfo) ([]byte, error) {
+	values := url.Values{}
+	values.Set("studentName", cert.StudentName)
+	values.Set("course", cert.Course)
+	values.Set("issuer", cert.Issuer)
+	values.Set("endorserName", cert.EndorserName)
+	values.Set("beginDate", cert.BeginDate)
+	values.Set("endDate", cert.EndDate)
+	values.Set("mail", cert.Mail)
+
+	queryString := values.Encode()
+
+	// Construct the QR link
+
 	// Generate PDF content using gofpdf library
 	var pdfBuffer bytes.Buffer
 	pdf := gofpdf.New("L", "mm", "A4", "")
@@ -58,6 +87,19 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 	// Add background image
 	pdf.ImageOptions("./img/template1.png", 0, 0, 297, 210, false, gofpdf.ImageOptions{}, 0, "")
 
+	// Add QR code to top-right corner
+	qrLink := fmt.Sprintf("http://localhost:3000/fetch?%s", queryString)
+	qrImg, err := qrcode.Encode(qrLink, qrcode.Medium, 256)
+	if err != nil {
+		log.Fatal("Error generating QR code: ", err)
+	}
+
+	// Create an io.Reader from the QR code image bytes
+	qrImgReader := bytes.NewReader(qrImg)
+
+	// Add QR code image to the PDF
+	pdf.RegisterImageReader("qr_code", "png", qrImgReader)
+	pdf.Image("qr_code", 90, 90, 50, 50, false, "", 0, "")
 	// Add recipient name
 	pdf.SetFont("Helvetica", "B", 36)
 	pdf.Text(145, 110, cert.StudentName)
@@ -65,6 +107,9 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 	// Add course name
 	pdf.SetFont("Helvetica", "", 20)
 	pdf.Text(145, 150, cert.Course)
+
+	pdf.SetFont("Helvetica", "", 20)
+	pdf.Text(140, 160, cert.Transaction)
 
 	pdf.SetFont("Helvetica", "", 15)
 	pdf.Text(88, 170, cert.Issuer)

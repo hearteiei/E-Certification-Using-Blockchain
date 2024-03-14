@@ -15,6 +15,7 @@ func (setup *OrgSetup) Invoke(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("ParseForm() err: %s", err), http.StatusBadRequest)
 		return
 	}
+
 	chainCodeName := r.FormValue("chaincodeid")
 	channelID := r.FormValue("channelid")
 	function := r.FormValue("function")

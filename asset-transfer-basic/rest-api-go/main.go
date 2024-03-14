@@ -22,5 +22,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Error initializing setup for Org1: ", err)
 	}
+	// Retrieve all blocks in the channel
+
 	web.Serve(web.OrgSetup(*orgSetup))
 }
