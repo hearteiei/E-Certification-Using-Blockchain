@@ -250,33 +250,52 @@ func (s *SmartContract) GetAllAssets(ctx contractapi.TransactionContextInterface
 
 	return assets, nil
 }
-func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, Course string, issuer string, issuedDate string) ([]byte, error) {
+
+type DiplomaInfo2 struct {
+	Course     string `json:"course"`
+	Status     string `json:"status"`
+	Issuer     string `json:"issuer"`
+	IssuerDate string `json:"issuerDate"`
+}
+
+func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, Course string, issuer string, issuedDate string) ([]*DiplomaInfo2, error) {
 	// Create a composite key for the query
-	queryKey := fmt.Sprintf("%s_%s_%s", Course, issuer, issuedDate)
-
-	// Retrieve the diploma record from the ledger
-	diplomaJSON, err := ctx.GetStub().GetState(queryKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
-	}
-	if diplomaJSON == nil {
-		return nil, fmt.Errorf("diploma with key %s does not exist", queryKey)
-	}
-
-	// Unmarshal the diploma record
-	var diploma Diploma
-	if err := json.Unmarshal(diplomaJSON, &diploma); err != nil {
-		return nil, err
-	}
-
-	// Create a JSON array containing the student's name
-	result := []string{diploma.StudentName}
-	resultJSON, err := json.Marshal(result)
+	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
 		return nil, err
 	}
+	defer resultsIterator.Close()
 
-	return resultJSON, nil
+	diplomasInfoMap := make(map[string]*DiplomaInfo2)
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+
+		var diploma Diploma
+		err = json.Unmarshal(queryResponse.Value, &diploma)
+		if err != nil {
+			return nil, err
+		}
+
+		if diploma.Issuer == issuer && diploma.Course == Course && issuedDate == diploma.IssuedDate {
+			key := diploma.Course + "|" + diploma.IssuedDate
+			diplomasInfoMap[key] = &DiplomaInfo2{
+				Course:     diploma.Course,
+				Status:     diploma.Status,
+				Issuer:     diploma.Issuer,
+				IssuerDate: diploma.IssuedDate,
+			}
+		}
+	}
+
+	// Convert map to slice of DiplomaInfo2
+	var diplomasInfo2 []*DiplomaInfo2
+	for _, info := range diplomasInfoMap {
+		diplomasInfo2 = append(diplomasInfo2, info)
+	}
+	return diplomasInfo2, nil
 }
 
 type DiplomaInfo struct {
@@ -305,7 +324,6 @@ func (s *SmartContract) GetDiplomasInfoByIssuer(ctx contractapi.TransactionConte
 		if err != nil {
 			return nil, err
 		}
-
 		if diploma.Issuer == issuer {
 			key := diploma.Course + "|" + diploma.IssuedDate
 			if existingDiploma, ok := diplomasInfoMap[key]; ok {
