@@ -307,3 +307,32 @@ func (s *SmartContract) GetDiplomasInfoByIssuer(ctx contractapi.TransactionConte
 
 	return diplomasInfo, nil
 }
+
+func (s *SmartContract) getstudent(ctx contractapi.TransactionContextInterface, subjectTopic string, issuer string, issuedDate string) ([]byte, error) {
+	// Create a composite key for the query
+	queryKey := fmt.Sprintf("%s_%s_%s", subjectTopic, issuer, issuedDate)
+
+	// Retrieve the diploma record from the ledger
+	diplomaJSON, err := ctx.GetStub().GetState(queryKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read from world state: %v", err)
+	}
+	if diplomaJSON == nil {
+		return nil, fmt.Errorf("diploma with key %s does not exist", queryKey)
+	}
+
+	// Unmarshal the diploma record
+	var diploma Diploma
+	if err := json.Unmarshal(diplomaJSON, &diploma); err != nil {
+		return nil, err
+	}
+
+	// Create a JSON array containing the student's name
+	result := []string{diploma.StudentName}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return nil, err
+	}
+
+	return resultJSON, nil
+}

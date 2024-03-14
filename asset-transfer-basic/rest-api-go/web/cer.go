@@ -1,13 +1,12 @@
 package web
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/smtp"
-	"os"
-	"path/filepath"
 
 	"github.com/jung-kurt/gofpdf"
 )
@@ -23,28 +22,21 @@ type CertificateInfo struct {
 
 func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 	// Parse JSON from request body
-	var certinfos CertificateInfo
-	if err := json.NewDecoder(r.Body).Decode(&certinfos); err != nil {
+	var cert CertificateInfo
+	if err := json.NewDecoder(r.Body).Decode(&cert); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Temporary directory to store PDFs
-	tempDir := "./temp/"
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		http.Error(w, "Failed to create temporary directory", http.StatusInternalServerError)
-		return
-	}
-
-	// Generate PDF and collect file path
-	pdfPath := tempDir + certinfos.StudentName + "-" + certinfos.Course + ".pdf"
-	if err := generatePDF(certinfos, pdfPath); err != nil {
+	// Generate PDF content
+	pdfData, err := generatePDF(cert)
+	if err != nil {
 		http.Error(w, "Failed to generate PDF", http.StatusInternalServerError)
 		return
 	}
 
 	// Send email with PDF attachment
-	if err := sendEmailWithAttachment(pdfPath, certinfos); err != nil {
+	if err := sendEmailWithAttachment(pdfData, cert); err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
 	}
@@ -55,10 +47,13 @@ func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "PDF generated and emailed successfully"})
 }
 
-func generatePDF(cert CertificateInfo, filePath string) error {
+func generatePDF(cert CertificateInfo) ([]byte, error) {
+	// Generate PDF content using gofpdf library
+	var pdfBuffer bytes.Buffer
 	pdf := gofpdf.New("L", "mm", "A4", "")
 	pdf.AddPage()
 
+	// Add your PDF generation logic here
 	// Add background image
 	pdf.ImageOptions("./img/template1.png", 0, 0, 297, 210, false, gofpdf.ImageOptions{}, 0, "")
 
@@ -74,14 +69,15 @@ func generatePDF(cert CertificateInfo, filePath string) error {
 	pdf.Text(88, 170, cert.Issuer)
 	pdf.Text(208, 170, cert.EndorserName)
 
-	// Save PDF to file
-	if err := pdf.OutputFileAndClose(filePath); err != nil {
-		return err
+	// Output PDF content to buffer
+	if err := pdf.Output(&pdfBuffer); err != nil {
+		return nil, err
 	}
-	return nil
+
+	return pdfBuffer.Bytes(), nil
 }
 
-func sendEmailWithAttachment(pdfPath string, cert CertificateInfo) error {
+func sendEmailWithAttachment(pdfData []byte, cert CertificateInfo) error {
 	// Sender email credentials
 	from := "test259492@gmail.com"
 	password := "rijq jocq csnq lhmq" // Use an App Password if using Gmail
@@ -92,33 +88,6 @@ func sendEmailWithAttachment(pdfPath string, cert CertificateInfo) error {
 	// Email configuration
 	subject := "Certificate PDF: " + cert.Course
 	body := fmt.Sprintf("Dear %s,\n\nPlease find attached your certificate for the course: %s.\n\nRegards,\n%s", cert.StudentName, cert.Course, cert.Issuer)
-
-	// SMTP server configuration
-	smtpServer := "smtp.gmail.com"
-	smtpPort := "587"
-
-	// Authentication with SMTP server
-	auth := smtp.PlainAuth("", from, password, smtpServer)
-
-	// Open PDF file
-	pdfFile, err := os.Open(pdfPath)
-	if err != nil {
-		return err
-	}
-	defer pdfFile.Close()
-
-	// Get file info
-	fileInfo, err := pdfFile.Stat()
-	if err != nil {
-		return err
-	}
-
-	// Read PDF file content
-	pdfData := make([]byte, fileInfo.Size())
-	_, err = pdfFile.Read(pdfData)
-	if err != nil {
-		return err
-	}
 
 	// Encode PDF data as base64
 	encodedPDF := base64.StdEncoding.EncodeToString(pdfData)
@@ -136,15 +105,16 @@ func sendEmailWithAttachment(pdfPath string, cert CertificateInfo) error {
 		body + "\r\n" +
 		"\r\n" +
 		"--boundary123456\r\n" +
-		"Content-Type: application/pdf; name=\"" + filepath.Base(pdfPath) + "\"\r\n" +
-		"Content-Disposition: attachment; filename=\"" + filepath.Base(pdfPath) + "\"\r\n" +
+		"Content-Type: application/pdf\r\n" +
+		"Content-Disposition: attachment; filename=\"certificate.pdf\"\r\n" +
 		"Content-Transfer-Encoding: base64\r\n" +
 		"\r\n" +
 		encodedPDF + "\r\n" +
 		"--boundary123456--\r\n"
 
 	// Send email
-	err = smtp.SendMail(smtpServer+":"+smtpPort, auth, from, []string{to}, []byte(message))
+	auth := smtp.PlainAuth("", from, password, "smtp.gmail.com")
+	err := smtp.SendMail("smtp.gmail.com:587", auth, from, []string{to}, []byte(message))
 	if err != nil {
 		return err
 	}
