@@ -18,6 +18,7 @@ type CertificateInfo struct {
 	EndorserName string `json:"endorserName"`
 	BeginDate    string `json:"beginDate"`
 	EndDate      string `json:"endDate"`
+	Mail         string `json:"Mail"`
 }
 
 func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,7 @@ func sendEmailWithAttachment(pdfData []byte, cert CertificateInfo) error {
 	password := "rijq jocq csnq lhmq" // Use an App Password if using Gmail
 
 	// Recipient email address
-	to := "uncles1512@gmail.com"
+	to := cert.Mail
 
 	// Email configuration
 	subject := "Certificate PDF: " + cert.Course
