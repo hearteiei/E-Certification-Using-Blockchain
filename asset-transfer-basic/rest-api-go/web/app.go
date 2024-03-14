@@ -29,6 +29,7 @@ func Serve(setups OrgSetup) {
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/checkotp", checkOTPValidity)
+	http.HandleFunc("/getall", getAllUsers)
 	http.HandleFunc("/generate-certificates", GenerateCertificates)
 	corsHandler := cors.Default().Handler(http.DefaultServeMux)
 	fmt.Println("Listening (http://localhost:8000/)...")
