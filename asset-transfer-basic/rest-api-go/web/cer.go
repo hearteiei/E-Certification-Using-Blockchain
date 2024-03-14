@@ -64,6 +64,18 @@ func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "PDF generated and emailed successfully"})
 }
 
+func calculateCenterPosition(pdf *gofpdf.Fpdf, text string, fontSize float64) float64 {
+	width := pdf.GetStringWidth(text)
+	pageWidth, _ := pdf.GetPageSize()
+	return (pageWidth - width) / 2
+}
+
+// Add text centered horizontally
+func addTextCentered(pdf *gofpdf.Fpdf, text string, y float64, fontSize float64) {
+	x := calculateCenterPosition(pdf, text, fontSize)
+	pdf.Text(x, y, text)
+}
+
 func generatePDF(cert CertificateInfo) ([]byte, error) {
 	values := url.Values{}
 	values.Set("studentName", cert.StudentName)
@@ -99,21 +111,43 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 
 	// Add QR code image to the PDF
 	pdf.RegisterImageReader("qr_code", "png", qrImgReader)
-	pdf.Image("qr_code", 90, 90, 50, 50, false, "", 0, "")
-	// Add recipient name
+	pdf.Image("qr_code", 10, 160, 40, 40, false, "", 0, "")
+	// // Add recipient name
+	// pdf.SetFont("Helvetica", "B", 36)
+	// pdf.Text(135, 120, cert.StudentName)
+
+	// // Add course name
+	// pdf.SetFont("Helvetica", "", 20)
+	// pdf.Text(135, 150, cert.Course)
+
+	// pdf.SetFont("Helvetica", "", 20)
+	// pdf.Text(140, 160, cert.Transaction)
+
+	// pdf.SetFont("Helvetica", "", 15)
+	if cert.BeginDate != "" || cert.EndDate != "" {
+		pdf.SetFont("Helvetica", "", 18)
+		pdf.Text(70, 195, "Begin_Date: "+cert.BeginDate)
+
+		pdf.SetFont("Helvetica", "", 18)
+		pdf.Text(145, 195, "End_Date: "+cert.EndDate)
+	}
+
+	// Add recipient name centered horizontally
 	pdf.SetFont("Helvetica", "B", 36)
-	pdf.Text(145, 110, cert.StudentName)
+	addTextCentered(pdf, cert.StudentName, 110, 36)
 
-	// Add course name
+	// Add course name centered horizontally
 	pdf.SetFont("Helvetica", "", 20)
-	pdf.Text(145, 150, cert.Course)
+	addTextCentered(pdf, cert.Course, 150, 20)
 
+	// Add transaction details centered horizontally
 	pdf.SetFont("Helvetica", "", 20)
-	pdf.Text(140, 160, cert.Transaction)
+	addTextCentered(pdf, cert.Transaction, 160, 20)
 
+	// Add issuer and endorser names centered horizontally
 	pdf.SetFont("Helvetica", "", 15)
-	pdf.Text(88, 170, cert.Issuer)
-	pdf.Text(208, 170, cert.EndorserName)
+	pdf.Text(70, 170, cert.Issuer)
+	pdf.Text(190, 170, cert.EndorserName)
 
 	// Output PDF content to buffer
 	if err := pdf.Output(&pdfBuffer); err != nil {
