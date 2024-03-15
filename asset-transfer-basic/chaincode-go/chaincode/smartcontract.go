@@ -252,11 +252,19 @@ func (s *SmartContract) GetAllAssets(ctx contractapi.TransactionContextInterface
 }
 
 type DiplomaInfo2 struct {
-	Course     string `json:"course"`
-	Status     string `json:"status"`
-	Issuer     string `json:"issuer"`
-	IssuerDate string `json:"issuerDate"`
+	ID            string `json:"ID"`
+	StudentName   string `json:"studentName"`
+	Endorser_name string `json:"endorser_name"`
+	Mail          string `json:"mail"`
+	Course        string `json:"course"`
+	Issuer        string `json:"issuer"`
+	IssuedDate    string `json:"issuedDate"`
+	Begin_date    string `json:"begin_Date"`
+	End_date      string `json:"End_Date"`
+	Status        string `json:"Status"`
 }
+
+var te int = 0
 
 func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, Course string, issuer string, issuedDate string) ([]*DiplomaInfo2, error) {
 	// Create a composite key for the query
@@ -280,12 +288,19 @@ func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, 
 		}
 
 		if diploma.Issuer == issuer && diploma.Course == Course && issuedDate == diploma.IssuedDate {
-			key := diploma.Course + "|" + diploma.IssuedDate
+			te++
+			key := diploma.Course + "|" + diploma.IssuedDate + strconv.Itoa(te)
 			diplomasInfoMap[key] = &DiplomaInfo2{
-				Course:     diploma.Course,
-				Status:     diploma.Status,
-				Issuer:     diploma.Issuer,
-				IssuerDate: diploma.IssuedDate,
+				ID:            diploma.ID,
+				StudentName:   diploma.StudentName,
+				Endorser_name: diploma.Endorser_name,
+				Mail:          diploma.Mail,
+				Course:        diploma.Course,
+				Status:        diploma.Status,
+				Issuer:        diploma.Issuer,
+				IssuedDate:    diploma.IssuedDate,
+				Begin_date:    diploma.Begin_date,
+				End_date:      diploma.End_date,
 			}
 		}
 	}
