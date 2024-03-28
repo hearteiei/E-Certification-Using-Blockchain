@@ -266,7 +266,7 @@ type DiplomaInfo2 struct {
 
 var te int = 0
 
-func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, Course string, issuer string, issuedDate string) ([]*DiplomaInfo2, error) {
+func (s SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, Course string, issuer string, issuedDate string) ([]*DiplomaInfo2, error) {
 	// Create a composite key for the query
 	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
@@ -274,7 +274,7 @@ func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, 
 	}
 	defer resultsIterator.Close()
 
-	diplomasInfoMap := make(map[string]*DiplomaInfo2)
+	var diplomasInfo2 []*DiplomaInfo2
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
@@ -288,28 +288,23 @@ func (s *SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, 
 		}
 
 		if diploma.Issuer == issuer && diploma.Course == Course && issuedDate == diploma.IssuedDate {
-			te++
-			key := diploma.Course + "|" + diploma.IssuedDate + strconv.Itoa(te)
-			diplomasInfoMap[key] = &DiplomaInfo2{
-				ID:            diploma.ID,
-				StudentName:   diploma.StudentName,
-				Endorser_name: diploma.Endorser_name,
-				Mail:          diploma.Mail,
-				Course:        diploma.Course,
-				Status:        diploma.Status,
-				Issuer:        diploma.Issuer,
-				IssuedDate:    diploma.IssuedDate,
-				Begin_date:    diploma.Begin_date,
-				End_date:      diploma.End_date,
+			if diploma.StudentName != "" && diploma.StudentName != "undefined undefined" { // Check if student name is not empty
+				diplomasInfo2 = append(diplomasInfo2, &DiplomaInfo2{
+					ID:            diploma.ID,
+					StudentName:   diploma.StudentName,
+					Endorser_name: diploma.Endorser_name,
+					Mail:          diploma.Mail,
+					Course:        diploma.Course,
+					Status:        diploma.Status,
+					Issuer:        diploma.Issuer,
+					IssuedDate:    diploma.IssuedDate,
+					Begin_date:    diploma.Begin_date,
+					End_date:      diploma.End_date,
+				})
 			}
 		}
 	}
 
-	// Convert map to slice of DiplomaInfo2
-	var diplomasInfo2 []*DiplomaInfo2
-	for _, info := range diplomasInfoMap {
-		diplomasInfo2 = append(diplomasInfo2, info)
-	}
 	return diplomasInfo2, nil
 }
 

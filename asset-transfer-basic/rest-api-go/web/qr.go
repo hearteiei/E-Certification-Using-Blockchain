@@ -16,6 +16,7 @@ type CertificateInfos struct {
 	BeginDate    string `json:"beginDate"`
 	EndDate      string `json:"endDate"`
 	Mail         string `json:"Mail"`
+	IssuerDate   string `json:"issuerdate"`
 }
 
 func GenCertificates(w http.ResponseWriter, r *http.Request) {
@@ -55,16 +56,33 @@ func genPDF(cert CertificateInfo) ([]byte, error) {
 	pdf.ImageOptions("./img/template1.png", 0, 0, 297, 210, false, gofpdf.ImageOptions{}, 0, "")
 
 	// Add recipient name
+	if cert.BeginDate != "" || cert.EndDate != "" {
+		pdf.SetFont("Helvetica", "", 18)
+		pdf.Text(70, 195, "Begin_Date: "+cert.BeginDate)
+
+		pdf.SetFont("Helvetica", "", 18)
+		pdf.Text(145, 195, "End_Date: "+cert.EndDate)
+	}
+
+	pdf.SetFont("Helvetica", "", 18)
+	addTextCentered(pdf, "IssuerDate: "+cert.IssuerDate, 180, 18)
+
+	// Add recipient name centered horizontally
 	pdf.SetFont("Helvetica", "B", 36)
-	pdf.Text(145, 110, cert.StudentName)
+	addTextCentered(pdf, cert.StudentName, 110, 36)
 
-	// Add course name
+	// Add course name centered horizontally
 	pdf.SetFont("Helvetica", "", 20)
-	pdf.Text(145, 150, cert.Course)
+	addTextCentered(pdf, cert.Course, 150, 20)
 
+	// Add transaction details centered horizontally
+	pdf.SetFont("Helvetica", "", 20)
+	addTextCentered(pdf, cert.Transaction, 160, 20)
+
+	// Add issuer and endorser names centered horizontally
 	pdf.SetFont("Helvetica", "", 15)
-	pdf.Text(88, 170, cert.Issuer)
-	pdf.Text(208, 170, cert.EndorserName)
+	pdf.Text(70, 170, cert.Issuer)
+	pdf.Text(190, 170, cert.EndorserName)
 
 	// Output PDF content to buffer
 	if err := pdf.Output(&pdfBuffer); err != nil {

@@ -1,7 +1,9 @@
 ./network.sh down
 ./network.sh up createChannel -c mychannel -ca
 ./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-go -ccl go
-
+peer channel fetch 8  -c mychannel
+peer channel getinfo -c mychannel
+configtxlator proto_decode --input ./mychannel_7.block --type common.Block > decoded_block.json 2> error.log
 export PATH=${PWD}/../bin:$PATH
 export FABRIC_CFG_PATH=$PWD/../config/
 export CORE_PEER_TLS_ENABLED=true

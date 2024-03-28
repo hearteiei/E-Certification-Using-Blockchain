@@ -23,6 +23,7 @@ type CertificateInfo struct {
 	EndDate      string `json:"endDate"`
 	Mail         string `json:"Mail"`
 	Transaction  string `json:"transaction"`
+	IssuerDate   string `json:"issuerdate"`
 }
 
 // type certificateData struct {
@@ -85,6 +86,7 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 	values.Set("beginDate", cert.BeginDate)
 	values.Set("endDate", cert.EndDate)
 	values.Set("mail", cert.Mail)
+	values.Set("IssuerDate", cert.IssuerDate)
 
 	queryString := values.Encode()
 
@@ -132,6 +134,8 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 		pdf.Text(145, 195, "End_Date: "+cert.EndDate)
 	}
 
+	pdf.SetFont("Helvetica", "", 18)
+	addTextCentered(pdf, "IssuerDate: "+cert.IssuerDate, 180, 18)
 	// Add recipient name centered horizontally
 	pdf.SetFont("Helvetica", "B", 36)
 	addTextCentered(pdf, cert.StudentName, 110, 36)
@@ -141,8 +145,10 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 	addTextCentered(pdf, cert.Course, 150, 20)
 
 	// Add transaction details centered horizontally
-	pdf.SetFont("Helvetica", "", 20)
-	addTextCentered(pdf, cert.Transaction, 160, 20)
+	if cert.Transaction != "" {
+		pdf.SetFont("Helvetica", "", 20)
+		addTextCentered(pdf, cert.Transaction, 160, 20)
+	}
 
 	// Add issuer and endorser names centered horizontally
 	pdf.SetFont("Helvetica", "", 15)
