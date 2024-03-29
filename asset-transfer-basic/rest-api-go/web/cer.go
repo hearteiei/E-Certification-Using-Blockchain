@@ -26,40 +26,29 @@ type CertificateInfo struct {
 	IssuerDate   string `json:"issuerdate"`
 }
 
-// type certificateData struct {
-// 	studentName  string `json:"studentName"`
-// 	course       string `json:"course"`
-// 	issuer       string `json:"issuer"`
-// 	endorserName string `json:"endorserName"`
-// 	beginDate    string `json:"beginDate"`
-// 	endDate      string `json:"endDate"`
-// 	mail         string `json:"endDate"`
-// }
-
 func GenerateCertificates(w http.ResponseWriter, r *http.Request) {
 	// Parse JSON from request body
 	var cert CertificateInfo
 
-	// var qrdata certificateData
 	if err := json.NewDecoder(r.Body).Decode(&cert); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Generate PDF content
+	// Generate PDF
 	pdfData, err := generatePDF(cert)
 	if err != nil {
 		http.Error(w, "Failed to generate PDF", http.StatusInternalServerError)
 		return
 	}
 
-	// Send email with PDF attachment
+	// Send email
 	if err := sendEmailWithAttachment(pdfData, cert); err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
 	}
 
-	// Write JSON response
+	// return JSON response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "PDF generated and emailed successfully"})
@@ -71,7 +60,6 @@ func calculateCenterPosition(pdf *gofpdf.Fpdf, text string, fontSize float64) fl
 	return (pageWidth - width) / 2
 }
 
-// Add text centered horizontally
 func addTextCentered(pdf *gofpdf.Fpdf, text string, y float64, fontSize float64) {
 	x := calculateCenterPosition(pdf, text, fontSize)
 	pdf.Text(x, y, text)
@@ -90,42 +78,23 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 
 	queryString := values.Encode()
 
-	// Construct the QR link
-
-	// Generate PDF content using gofpdf library
 	var pdfBuffer bytes.Buffer
 	pdf := gofpdf.New("L", "mm", "A4", "")
 	pdf.AddPage()
 
-	// Add your PDF generation logic here
-	// Add background image
 	pdf.ImageOptions("./img/template1.png", 0, 0, 297, 210, false, gofpdf.ImageOptions{}, 0, "")
 
-	// Add QR code to top-right corner
 	qrLink := fmt.Sprintf("http://localhost:3000/fetch?%s", queryString)
 	qrImg, err := qrcode.Encode(qrLink, qrcode.Medium, 256)
 	if err != nil {
 		log.Fatal("Error generating QR code: ", err)
 	}
 
-	// Create an io.Reader from the QR code image bytes
 	qrImgReader := bytes.NewReader(qrImg)
 
-	// Add QR code image to the PDF
 	pdf.RegisterImageReader("qr_code", "png", qrImgReader)
 	pdf.Image("qr_code", 10, 160, 40, 40, false, "", 0, "")
-	// // Add recipient name
-	// pdf.SetFont("Helvetica", "B", 36)
-	// pdf.Text(135, 120, cert.StudentName)
 
-	// // Add course name
-	// pdf.SetFont("Helvetica", "", 20)
-	// pdf.Text(135, 150, cert.Course)
-
-	// pdf.SetFont("Helvetica", "", 20)
-	// pdf.Text(140, 160, cert.Transaction)
-
-	// pdf.SetFont("Helvetica", "", 15)
 	if cert.BeginDate != "" || cert.EndDate != "" {
 		pdf.SetFont("Helvetica", "", 18)
 		pdf.Text(70, 195, "Begin_Date: "+cert.BeginDate)
@@ -136,26 +105,22 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 
 	pdf.SetFont("Helvetica", "", 18)
 	addTextCentered(pdf, "IssuerDate: "+cert.IssuerDate, 180, 18)
-	// Add recipient name centered horizontally
+
 	pdf.SetFont("Helvetica", "B", 36)
 	addTextCentered(pdf, cert.StudentName, 110, 36)
 
-	// Add course name centered horizontally
 	pdf.SetFont("Helvetica", "", 20)
 	addTextCentered(pdf, cert.Course, 150, 20)
 
-	// Add transaction details centered horizontally
 	if cert.Transaction != "" {
 		pdf.SetFont("Helvetica", "", 20)
 		addTextCentered(pdf, cert.Transaction, 160, 20)
 	}
 
-	// Add issuer and endorser names centered horizontally
 	pdf.SetFont("Helvetica", "", 15)
 	pdf.Text(70, 170, cert.Issuer)
 	pdf.Text(190, 170, cert.EndorserName)
 
-	// Output PDF content to buffer
 	if err := pdf.Output(&pdfBuffer); err != nil {
 		return nil, err
 	}
@@ -164,21 +129,18 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 }
 
 func sendEmailWithAttachment(pdfData []byte, cert CertificateInfo) error {
-	// Sender email credentials
-	from := "test259492@gmail.com"
-	password := "rijq jocq csnq lhmq" // Use an App Password if using Gmail
 
-	// Recipient email address
+	from := "test259492@gmail.com"
+	password := "rijq jocq csnq lhmq"
+
 	to := cert.Mail
 
 	// Email configuration
 	subject := "Certificate PDF: " + cert.Course
 	body := fmt.Sprintf("Dear %s,\n\nPlease find attached your certificate for the course: %s.\n\nRegards,\n%s", cert.StudentName, cert.Course, cert.Issuer)
 
-	// Encode PDF data as base64
 	encodedPDF := base64.StdEncoding.EncodeToString(pdfData)
 
-	// Compose email message
 	message := "From: " + from + "\r\n" +
 		"To: " + to + "\r\n" +
 		"Subject: " + subject + "\r\n" +

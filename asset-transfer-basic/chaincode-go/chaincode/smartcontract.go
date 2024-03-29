@@ -179,7 +179,6 @@ func (s *SmartContract) UpdateAsset(ctx contractapi.TransactionContextInterface,
 		return fmt.Errorf("the asset %s does not exist", id)
 	}
 
-	// overwriting original asset with new asset
 	diploma := Diploma{
 		ID:            id,
 		StudentName:   studentname,
@@ -225,8 +224,7 @@ func (s *SmartContract) AssetExists(ctx contractapi.TransactionContextInterface,
 
 // GetAllAssets returns all assets found in world state
 func (s *SmartContract) GetAllAssets(ctx contractapi.TransactionContextInterface) ([]*Diploma, error) {
-	// range query with empty string for startKey and endKey does an
-	// open-ended query of all assets in the chaincode namespace.
+
 	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
 		return nil, err
@@ -288,7 +286,7 @@ func (s SmartContract) Getstudent(ctx contractapi.TransactionContextInterface, C
 		}
 
 		if diploma.Issuer == issuer && diploma.Course == Course && issuedDate == diploma.IssuedDate {
-			if diploma.StudentName != "" && diploma.StudentName != "undefined undefined" { // Check if student name is not empty
+			if diploma.StudentName != "" && diploma.StudentName != "undefined undefined" {
 				diplomasInfo2 = append(diplomasInfo2, &DiplomaInfo2{
 					ID:            diploma.ID,
 					StudentName:   diploma.StudentName,
@@ -322,7 +320,7 @@ func (s *SmartContract) GetDiplomasInfoByIssuer(ctx contractapi.TransactionConte
 	}
 	defer resultsIterator.Close()
 
-	diplomasInfoMap := make(map[string]*DiplomaInfo) // Change to store pointers
+	diplomasInfoMap := make(map[string]*DiplomaInfo)
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
@@ -346,7 +344,7 @@ func (s *SmartContract) GetDiplomasInfoByIssuer(ctx contractapi.TransactionConte
 					existingDiploma.Status = "Success"
 				}
 			} else {
-				diplomasInfoMap[key] = &DiplomaInfo{ // Store pointer to DiplomaInfo
+				diplomasInfoMap[key] = &DiplomaInfo{
 					Course:     diploma.Course,
 					Status:     diploma.Status,
 					IssuerDate: diploma.IssuedDate,
@@ -355,7 +353,6 @@ func (s *SmartContract) GetDiplomasInfoByIssuer(ctx contractapi.TransactionConte
 		}
 	}
 
-	// Convert map to slice of DiplomaInfo
 	var diplomasInfo []*DiplomaInfo
 	for _, info := range diplomasInfoMap {
 		diplomasInfo = append(diplomasInfo, info)
