@@ -131,7 +131,7 @@ func generatePDF(cert CertificateInfo) ([]byte, error) {
 func sendEmailWithAttachment(pdfData []byte, cert CertificateInfo) error {
 
 	from := "test259492@gmail.com"
-	password := "rijq jocq csnq lhmq"
+	password := ""
 
 	to := cert.Mail
 

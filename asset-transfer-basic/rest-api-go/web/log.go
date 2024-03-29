@@ -59,7 +59,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 func sendEmail(to, subject, body string) error {
 
 	from := "test259492@gmail.com"
-	password := "rijq jocq csnq lhmq"
+	password := ""
 
 	host := "smtp.gmail.com"
 	port := "587"
