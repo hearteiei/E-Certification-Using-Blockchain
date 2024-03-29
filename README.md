@@ -37,5 +37,6 @@ in cer.go
 ![image](https://github.com/hearteiei/E-Certification-Using-Blockchain/assets/76035287/a8a5f837-8825-404c-b724-b4c7c45c854a)
 
 in log.go
-![image](https://github.com/hearteiei/E-Certification-Using-Blockchain/assets/76035287/dce63115-f949-499a-897f-922c8a6e7fc9)
+![image](https://github.com/hearteiei/E-Certification-Using-Blockchain/assets/76035287/1564321a-1cb1-4660-8819-0d291a63505d)
+
 
