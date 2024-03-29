@@ -31,3 +31,11 @@ go to rest-api-go
 
 ถ้าอยากแก้ไขchain code ต้องไปแก้ใน chaincode-go สำหรับคนที่ต้องการพัฒนา
 ซึ่งอยู่ใน asset-transfer-basic\chaincode-go\chaincode\smartcontract.go
+
+โปรดใส่mail และ app password ของคุณเพื่อใช้งาน 
+in cer.go
+![image](https://github.com/hearteiei/E-Certification-Using-Blockchain/assets/76035287/a8a5f837-8825-404c-b724-b4c7c45c854a)
+
+in log.go
+![image](https://github.com/hearteiei/E-Certification-Using-Blockchain/assets/76035287/dce63115-f949-499a-897f-922c8a6e7fc9)
+
