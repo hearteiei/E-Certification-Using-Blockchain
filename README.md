@@ -1,6 +1,6 @@
-[//]: # (SPDX-License-Identifier: CC-BY-4.0)
 
-# Hyperledger Fabric Samples
+
+# Verification System of E-Certificate using Hyperledger Fabric Blockchain back-end api
 
 [![Build Status](https://dev.azure.com/Hyperledger/Fabric-Samples/_apis/build/status/Fabric-Samples?branchName=main)](https://dev.azure.com/Hyperledger/Fabric-Samples/_build/latest?definitionId=28&branchName=main)
 
